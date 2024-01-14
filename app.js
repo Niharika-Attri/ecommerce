@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const morgan = require('morgan')
 const customerRouter = require('./router/customer.route')
+const sellerRouter = require('./router/seller.route')
 require('dotenv').config();
 
 const app = express();
@@ -18,3 +19,4 @@ app.use(express.json())
 app.use(morgan('dev'))
 
 app.use('/customer', customerRouter)
+app.use('/seller', sellerRouter)
