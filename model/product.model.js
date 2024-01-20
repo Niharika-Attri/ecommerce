@@ -13,9 +13,6 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    seller: {
-        type: mongoose.Schema.ObjectId
-    },
     category: {
         type: String,
         required: true
