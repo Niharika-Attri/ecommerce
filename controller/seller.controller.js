@@ -104,12 +104,10 @@ const uploadImage = async(imgUrl) => {
         const result = await cloudinary.uploader.upload(imgUrl, options)
         console.log(result);
         cloudinaryUrl = result.url
-        console.log(cloudinaryUrl);
         
     }catch(err){
         console.log("error" + err);
     }   
-    console.log(cloudinaryUrl);
 }
 
 const addProduct = async(req, res) => {
