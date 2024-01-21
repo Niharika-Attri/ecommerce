@@ -27,10 +27,12 @@ const sellerSignup = async (req, res) => {
     // hashing password
     const hashedPassword = await bcrypt.hash(data.password, 8)
 
+    // if user exists
     const existingUser = await sellerModel.findOne({
         email: data.email
     })
 
+    // new user if doesn't already exist
     if(!existingUser){
         try{
             const newSeller = new sellerModel({
@@ -38,19 +40,20 @@ const sellerSignup = async (req, res) => {
                 email: data.email,
                 password:hashedPassword
             })
-            // saving new seller
+            // saving new user
             await newSeller.save()
             res.status(400).json({
-                message:'User signed in'
+                message:'User signed in successfully'
             })
         }catch(err){
             res.status(500).json({
-                error: err
+                error: err.stack,
+                message: 'Sign up failed'
             })
         }
     }else{
         res.status(400).json({
-            message: 'email already registered'
+            message: 'email already registered, please login'
         })
     }
 
@@ -60,13 +63,17 @@ const sellerSignup = async (req, res) => {
 const sellerLogin = async (req, res) => {
     const data = req.body;
 
+    if(!data.email || !data.password){
+        res.status(400).json({
+            message:'please provide email and password'
+        })
+    }
+
     try{
-            
+        // if user exists 
         const existingUser = await sellerModel.findOne({
             email: data.email
         })
-
-        // console.log(data);
 
         if(!existingUser){
             res.status(400).json({
@@ -92,7 +99,7 @@ const sellerLogin = async (req, res) => {
     }catch(err){
         res.status(500).json({
             message: 'login failed',
-            error: err
+            error: err.stack
         })
     }
 }
@@ -101,17 +108,18 @@ const sellerLogin = async (req, res) => {
 var decoded
 function verifyToken(req, res, next){
     const token = req.header('Authorization')
+
+    // if token not provided
     if(!token){
         res.status(401).json({
             message:'access denied, please signup or login'
         })
     }
+
+    // verifying token
     try{
         // secret key
         decoded = jwt.verify(token,'authsystem' )
-
-        // decoded token
-        // decodedseller = decoded
         console.log('authorized', decoded);
         next();
     }catch(err){
@@ -132,9 +140,7 @@ const uploadImage = async(imgUrl) => {
     }
     try{
         const result = await cloudinary.uploader.upload(imgUrl, options)
-        // console.log(result);
         cloudinaryUrl = result.url
-        // console.log(cloudinaryUrl);
         
     }catch(err){
          console.log("error uploading image to cloudinary" + err);
@@ -147,6 +153,14 @@ const addProduct = async(req, res) => {
     const data = req.body
     const imageUrl = data.image;
 
+    // if data provided
+    if(!data.name || !data.price || !data.description || !data.category || !data.image){
+        res.status(400).json({
+            message: 'please provide name, price, description, category and image'
+        })
+    }
+
+    // if product exists
     const existingProduct = await productModel.findOne({
         name: data.name,
         price: data.price
@@ -154,7 +168,10 @@ const addProduct = async(req, res) => {
 
     if(!existingProduct){
         try{
+            // upload image
             await uploadImage(imageUrl)
+
+            // new product
             const newProduct = new productModel({
                 name: data.name,
                 price: data.price,
@@ -163,11 +180,11 @@ const addProduct = async(req, res) => {
                 image: cloudinaryUrl
             })
 
+            // saving new product
             try{
                 const savedDocument = await newProduct.save();
                 savedId = savedDocument._id;
                 console.log('saved document Id:', savedId);
-                
             }catch(error){
                 res.status(400).json({error: error.stack, message: 'error saving document'})
                 console.log('error saving document', error);
@@ -176,7 +193,6 @@ const addProduct = async(req, res) => {
             // adding new product to seller
             const productId = savedId
             const sellerId = decoded.seller._id
-            console.log("productId: "+ productId,"sellerId:" + sellerId);
             try{
                 const existingSeller = await sellerModel.findOne({
                     _id: sellerId
