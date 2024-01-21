@@ -98,6 +98,7 @@ const sellerLogin = async (req, res) => {
 }
 
 // verify token
+var decoded
 function verifyToken(req, res, next){
     const token = req.header('Authorization')
     if(!token){
@@ -107,9 +108,10 @@ function verifyToken(req, res, next){
     }
     try{
         // secret key
-        const decoded = jwt.verify(token,'authsystem' )
+        decoded = jwt.verify(token,'authsystem' )
+
         // decoded token
-        req.user = decoded
+        // decodedseller = decoded
         console.log('authorized', decoded);
         next();
     }catch(err){
@@ -139,7 +141,8 @@ const uploadImage = async(imgUrl) => {
     }   
 }
 
-// add new product
+// add new product/
+var savedId
 const addProduct = async(req, res) => {
     const data = req.body
     const imageUrl = data.image;
@@ -152,7 +155,6 @@ const addProduct = async(req, res) => {
     if(!existingProduct){
         try{
             await uploadImage(imageUrl)
-            // console.log(cloudinaryUrl);
             const newProduct = new productModel({
                 name: data.name,
                 price: data.price,
@@ -160,19 +162,37 @@ const addProduct = async(req, res) => {
                 category: data.category,
                 image: cloudinaryUrl
             })
-            // console.log(newProduct);
 
             try{
                 const savedDocument = await newProduct.save();
-                const savedId = savedDocument._id;
+                savedId = savedDocument._id;
                 console.log('saved document Id:', savedId);
-                res.status(200).json({
-                    message:'new product added'
-                })
+                
             }catch(error){
                 res.status(400).json({error: error.stack, message: 'error saving document'})
                 console.log('error saving document', error);
             }
+
+            // adding new product to seller
+            const productId = savedId
+            const sellerId = decoded.seller._id
+            console.log("productId: "+ productId,"sellerId:" + sellerId);
+            try{
+                const existingSeller = await sellerModel.findOne({
+                    _id: sellerId
+                })
+                existingSeller.products.push(productId)
+                await existingSeller.save()
+                res.status(200).json({
+                    message:'new product added'
+                })
+            }catch(err){
+                res.status(500).json({
+                    message: 'error adding product to seller',
+                    error: err.stack
+                })
+            }
+            
         }catch(err){
             res.status(500).json({
                 error: err.stack,
@@ -187,19 +207,5 @@ const addProduct = async(req, res) => {
     }
 }
 
-const addProducttoSeller = async (req, res) => {
-    const productId = req.body.productId
-    const sellerId = req.body.sellerId
-    
-    const existingProduct = await sellerModel.findOne(productId)
-    const existingUser = await sellerModel.findOne(sellerId)
-    if(existingProduct && existingUser){
-        existingUser.products.push(productId)
-        await existingUser.save()
-        res.status(200).json({
-            message: ' productId added to seller successfully'
-        })
 
-    }
-}
-module.exports = {sellerSignup, sellerLogin, addProduct, addProducttoSeller, verifyToken}
+module.exports = {sellerSignup, sellerLogin, addProduct, verifyToken}
