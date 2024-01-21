@@ -2,7 +2,8 @@ const sellerModel = require('../model/seller.model');
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const cloudinary = require('cloudinary').v2
-const productModel = require('../model/product.model')
+const productModel = require('../model/product.model');
+const customerModel = require('../model/customer.model');
 require('dotenv').config();
 
 cloudinary.config({
@@ -12,6 +13,7 @@ cloudinary.config({
     api_secret: process.env.CLOUD_SECRET
 })
 
+// seller signup
 const sellerSignup = async (req, res) => {
     const data = req.body
 
@@ -22,6 +24,7 @@ const sellerSignup = async (req, res) => {
         return
     }
 
+    // hashing password
     const hashedPassword = await bcrypt.hash(data.password, 8)
 
     const existingUser = await sellerModel.findOne({
@@ -35,6 +38,7 @@ const sellerSignup = async (req, res) => {
                 email: data.email,
                 password:hashedPassword
             })
+            // saving new seller
             await newSeller.save()
             res.status(400).json({
                 message:'User signed in'
@@ -52,6 +56,7 @@ const sellerSignup = async (req, res) => {
 
 }
 
+// seller login
 const sellerLogin = async (req, res) => {
     const data = req.body;
 
@@ -61,7 +66,7 @@ const sellerLogin = async (req, res) => {
             email: data.email
         })
 
-        console.log(data);
+        // console.log(data);
 
         if(!existingUser){
             res.status(400).json({
@@ -69,8 +74,7 @@ const sellerLogin = async (req, res) => {
             })
         }
 
-        console.log(existingUser);
-
+        // comparing password
         const passwordMatch = await bcrypt.compare(data.password, existingUser.password)
         if(!passwordMatch){
             res.status(401).json({
@@ -78,7 +82,8 @@ const sellerLogin = async (req, res) => {
             })
         }
 
-        const token = jwt.sign({sellerId:existingUser._id}, 'authsystem', {expiresIn: '1h'})
+        // assigning token
+        const token = jwt.sign({seller:existingUser}, 'authsystem', {expiresIn: '1h'})
         res.status(200).json({
             token,
             message: 'Successfully logged in'
@@ -92,8 +97,31 @@ const sellerLogin = async (req, res) => {
     }
 }
 
+// verify token
+function verifyToken(req, res, next){
+    const token = req.header('Authorization')
+    if(!token){
+        res.status(401).json({
+            message:'access denied, please signup or login'
+        })
+    }
+    try{
+        // secret key
+        const decoded = jwt.verify(token,'authsystem' )
+        // decoded token
+        req.user = decoded
+        console.log('authorized', decoded);
+        next();
+    }catch(err){
+        res.status(401).json({
+            error: 'invalid token'
+        })
+    }
+}
+
 var cloudinaryUrl
 
+// upload image to cloudinary
 const uploadImage = async(imgUrl) => {
     const options = {
         use_filename: true,
@@ -102,14 +130,16 @@ const uploadImage = async(imgUrl) => {
     }
     try{
         const result = await cloudinary.uploader.upload(imgUrl, options)
-        console.log(result);
+        // console.log(result);
         cloudinaryUrl = result.url
+        // console.log(cloudinaryUrl);
         
     }catch(err){
-        console.log("error" + err);
+         console.log("error uploading image to cloudinary" + err);
     }   
 }
 
+// add new product
 const addProduct = async(req, res) => {
     const data = req.body
     const imageUrl = data.image;
@@ -121,23 +151,32 @@ const addProduct = async(req, res) => {
 
     if(!existingProduct){
         try{
-            uploadImage(imageUrl)
+            await uploadImage(imageUrl)
+            // console.log(cloudinaryUrl);
+            const newProduct = new productModel({
+                name: data.name,
+                price: data.price,
+                description: data.description,
+                category: data.category,
+                image: cloudinaryUrl
+            })
+            // console.log(newProduct);
 
-        const newProduct = new productModel({
-            name: data.name,
-            price: data.price,
-            description: data.description,
-            category: data.category,
-            image: cloudinaryUrl
-        })
-
-        await newProduct.save()
-        res.status(200).json({
-            message:'new product added'
-        })
+            try{
+                const savedDocument = await newProduct.save();
+                const savedId = savedDocument._id;
+                console.log('saved document Id:', savedId);
+                res.status(200).json({
+                    message:'new product added'
+                })
+            }catch(error){
+                res.status(400).json({error: error.stack, message: 'error saving document'})
+                console.log('error saving document', error);
+            }
         }catch(err){
             res.status(500).json({
-                error: err
+                error: err.stack,
+                message: 'internal server error'
             })
         }
         
@@ -146,9 +185,21 @@ const addProduct = async(req, res) => {
             message: 'Product with same price already exists'
         })
     }
-
-    
-
-
 }
-module.exports = {sellerSignup, sellerLogin, addProduct}
+
+const addProducttoSeller = async (req, res) => {
+    const productId = req.body.productId
+    const sellerId = req.body.sellerId
+    
+    const existingProduct = await sellerModel.findOne(productId)
+    const existingUser = await sellerModel.findOne(sellerId)
+    if(existingProduct && existingUser){
+        existingUser.products.push(productId)
+        await existingUser.save()
+        res.status(200).json({
+            message: ' productId added to seller successfully'
+        })
+
+    }
+}
+module.exports = {sellerSignup, sellerLogin, addProduct, addProducttoSeller, verifyToken}
