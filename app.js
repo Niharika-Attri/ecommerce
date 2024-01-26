@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const cloudinary = require('cloudinary').v2;
 const customerRouter = require('./router/customer.route')
 const sellerRouter = require('./router/seller.route')
+const productRouter = require('./router/product.route')
 require('dotenv').config();
 
 // cloudinary.config({
@@ -30,6 +31,7 @@ app.use(morgan('dev'))
 
 app.use('/customer', customerRouter)
 app.use('/seller', sellerRouter)
+app.use('/products', productRouter)
 
 // const uploadImage = async (imagePath) => {
 //     const imgPath = 'https://cloudinary-devs.github.io/cld-docs-assets/assets/images/happy_people.jpg';

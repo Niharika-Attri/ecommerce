@@ -223,5 +223,7 @@ const addProduct = async(req, res) => {
     }
 }
 
+// const deleteProduct
+
 
 module.exports = {sellerSignup, sellerLogin, addProduct, verifyToken}
