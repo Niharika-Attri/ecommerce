@@ -1,3 +1,5 @@
-const { Mongoose } = require("mongoose")
+const { Mongoose, default: mongoose } = require("mongoose")
 
-const orderHistory = new Mongoose.sche
+const orderHistorySchema = new mongoose.Schema({
+    
+})
