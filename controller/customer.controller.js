@@ -186,5 +186,6 @@ const addToCart = async( req, res) =>{
             error: err.stack
         })  
     }
+    console.log(object);
 }
 module.exports = {customerSignup, customerlogin, addToCart, verifyToken}
