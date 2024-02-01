@@ -59,6 +59,12 @@ const customerlogin = async(req, res) => {
 
     const email = data.email
     const password = data.password
+    if(!email || !password){
+        res.status(401).json({
+            message: 'please provide email and password'
+        })
+        return
+    }
 
     try{
         // check if registered
@@ -71,6 +77,7 @@ const customerlogin = async(req, res) => {
             res.status(400).json({
                 message: 'email not registered, please sign in'
             })
+            return
         }
         
         // compare password if email registered
@@ -81,6 +88,7 @@ const customerlogin = async(req, res) => {
             res.status(401).json({
                 message: 'authentication failed'
             })
+            return
         }
     
         // provide token if matches
@@ -188,4 +196,68 @@ const addToCart = async( req, res) =>{
     }
     console.log(object);
 }
-module.exports = {customerSignup, customerlogin, addToCart, verifyToken}
+
+// remove from cart
+const removeFromCart = async(req, res) => {
+    const productId = req.params.id
+
+    // if product exists
+    const existingProduct = await productModel.findOne({
+        _id: productId
+    })
+
+    // if doesn't exist
+    if(!existingProduct){
+        res.status(400).json({
+            message: 'product not found'
+        })
+        return
+    }
+
+    const customer = decoded.customer
+
+    // if cart exists
+    const existingCart = await cartModel.findOne({
+        customer: customer
+    })
+    
+    // if doesn't exist 
+    if(!existingCart){
+        res.status(400).json({
+            message: 'cart not created'
+        })
+        return
+    }
+
+    // if product in cart
+    const index = existingCart.products.indexOf(productId)
+
+    // if not in cart
+    if( index == -1){
+        res.status(400).json({
+            message: 'product not in cart'
+        })
+        return
+    }
+    // console.log(index);
+
+    try{
+        // remove from array
+        existingCart.products.splice(index, 1)
+
+        // save document
+        existingCart.save()
+        res.status(400).json({
+            message: 'product removed successfully',
+            existingCart: existingCart
+        })
+    }catch(err){
+        res.status(500).json({
+            message: 'internal server error',
+            error: err.stack
+        })
+    }
+    
+    
+}
+module.exports = {customerSignup, customerlogin, addToCart, removeFromCart, verifyToken}
