@@ -253,7 +253,7 @@ const removeFromCart = async(req, res) => {
         })
     }catch(err){
         res.status(500).json({
-            message: 'internal server error',
+            message: 'error saving the document',
             error: err.stack
         })
     }
