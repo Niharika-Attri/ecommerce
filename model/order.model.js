@@ -12,5 +12,11 @@ const orderSchema = new mongoose.Schema({
     products: [{
         type: mongoose.Schema.ObjectId,
         ref: 'cart'
-    }]
+    }],
+    orderedOn: {
+        type: Date
+    },
+    deliveryDate: {
+        type: Date
+    }
 })

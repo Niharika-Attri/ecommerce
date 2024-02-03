@@ -260,4 +260,47 @@ const removeFromCart = async(req, res) => {
     
     
 }
-module.exports = {customerSignup, customerlogin, addToCart, removeFromCart, verifyToken}
+
+// view cart
+const viewcart = async(req, res) => {
+    try{
+        const customerId = req.params._id;
+
+    const page = parseInt(req.query.page)-1 || 0;
+    const limit = parseInt(req.query.limit) || 4;
+    let sort = req.query.sort || "products"
+    req.query.sort?(sort = req.query.sort.toString().split(",")):(sort = [sort])
+    let sortBy = {}
+    if(sort[1]){
+        sortBy[sort[0]] = sort[1]
+    }else{
+        sortBy[sort[0]] = "asc"
+    }
+
+    let cart = await cartModel.find({
+        customer: customerId
+    })
+    let products = cart.products
+        .sort(sortBy)
+        .skip(page*limit)
+        .limit(limit)
+    
+    if(products.length == 0){
+        res.status(400).json({
+            message: "no products found"
+        })
+        return
+    }
+    res.status(200).json({
+        page: page + 1,
+        limit,
+        products
+    })
+    }catch(err){
+        res.status(500).json({
+            message: "internal server error",
+            error: err.stack
+        })
+    }
+}
+module.exports = {customerSignup, customerlogin, addToCart, removeFromCart, verifyToken, viewcart}
