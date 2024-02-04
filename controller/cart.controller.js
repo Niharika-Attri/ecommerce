@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const customerModel = require('../model/customer.model')
+const productModel = require('../model/product.model')
 const cartModel = require('../model/cart.model')
 const jwt = require('jsonwebtoken')
 
@@ -91,7 +92,6 @@ const addToCart = async( req, res) =>{
             error: err.stack
         })  
     }
-    console.log(object);
 }
 
 // remove from cart
@@ -161,8 +161,8 @@ const removeFromCart = async(req, res) => {
 // view cart
 const viewCart = async(req, res) => {
     try{
-        const customerId = req.params._id;
-        // var objectId = new mongoose.Types.ObjectId(customerId);
+        const customerId = req.params.id;
+        console.log(customerId);
 
         const page = parseInt(req.query.page)-1 || 0;
         const limit = parseInt(req.query.limit) || 4;
@@ -175,21 +175,19 @@ const viewCart = async(req, res) => {
             sortBy[sort[0]] = "asc"
         }
 
-        let cart = await cartModel.find({
-            // _id: customerId
-        })
+        let cart = await cartModel.findById(customerId)
         // let products = cart.products
             .sort(sortBy)
             .skip(page*limit)
             .limit(limit)
             .populate('products')
         
-        // if(cart.length == 0){
-        //     res.status(400).json({
-        //         message: "no products found"
-        //     })
-        //     return
-        // }
+        if(cart.length == 0){
+            res.status(400).json({
+                message: "no products found"
+            })
+            return
+        }
         res.status(200).json({
             page: page + 1,
             limit,
@@ -201,6 +199,11 @@ const viewCart = async(req, res) => {
             error: err.stack
         })
     }
+}
+
+// order
+const placeOrder = async(req, res) => {
+
 }
 
 module.exports = {verifyToken, addToCart, removeFromCart, viewCart}
