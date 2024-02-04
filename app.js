@@ -4,7 +4,9 @@ const morgan = require('morgan');
 const cloudinary = require('cloudinary').v2;
 const customerRouter = require('./router/customer.route')
 const sellerRouter = require('./router/seller.route')
-const productRouter = require('./router/product.route')
+const productRouter = require('./router/product.route');
+const cartRouter = require('./router/cart.route')
+const cartModel = require('./model/cart.model');
 require('dotenv').config();
 
 // cloudinary.config({
@@ -32,4 +34,9 @@ app.use(morgan('dev'))
 app.use('/customer', customerRouter)
 app.use('/seller', sellerRouter)
 app.use('/products', productRouter)
-
+app.use('/cart', cartRouter)
+app.use((req, res) => {
+    res.status(404).json({
+        error: 'page not found'
+    })
+})

@@ -1,10 +1,6 @@
 const mongoose = require('mongoose')
 
 const orderSchema = new mongoose.Schema({
-    customer: {
-        type: String,
-        required: true 
-    },
     address: {
         type: String, 
         required: true
@@ -20,3 +16,7 @@ const orderSchema = new mongoose.Schema({
         type: Date
     }
 })
+
+const orderModel = new mongoose.model('order', orderSchema)
+
+module.exports = orderModel
