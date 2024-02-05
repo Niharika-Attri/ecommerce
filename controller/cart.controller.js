@@ -203,7 +203,17 @@ const viewCart = async(req, res) => {
 
 // order
 const placeOrder = async(req, res) => {
+    const cartId = req.params.id
+    const customerId = decoded._id
+    const orderedOn = getDate()
+    console.log(orderedOn);
+    try{
+        const cart = await cartModel.findById()
+        const products = cart.products
+    }catch(err){
 
+    }
+    
 }
 
-module.exports = {verifyToken, addToCart, removeFromCart, viewCart}
+module.exports = {verifyToken, addToCart, removeFromCart, viewCart, placeOrder}
