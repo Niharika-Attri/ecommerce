@@ -3,6 +3,7 @@ const customerModel = require('../model/customer.model')
 const productModel = require('../model/product.model')
 const cartModel = require('../model/cart.model')
 const jwt = require('jsonwebtoken')
+const orderModel = require('../model/order.model')
 
 // verify token
 var decoded
@@ -14,6 +15,7 @@ function verifyToken(req, res, next){
         res.status(401).json({
             message:'access denied, please signup or login'
         })
+        return
     }
 
     // verifying token
@@ -200,18 +202,85 @@ const viewCart = async(req, res) => {
         })
     }
 }
+// clear cart
+// async function clearCart(cartId){
+//     try{
+//         let cart = await cartModel.findById(cartId)
+//             .populate('products')
+//         const products = cart.products
+//         if(!products){
+//             res.status(400).json({
+//                 message:'cart is empty'
+//             })
+//             return
+//         }
+//         res.status(200).json({
+//             products,
+            
+//         })
+//     }catch(err){
+//         res.status(500).json({
+//             message:'internal server error',
+//             error: err.stack
+//         })
+//     }
+    
+// }
 
-// order
+// placeorder
 const placeOrder = async(req, res) => {
+    if(!req.body.address){
+        res.status(400).json({
+            message:'please enter address'
+        })
+        return
+    }
     const cartId = req.params.id
-    const customerId = decoded._id
-    const orderedOn = getDate()
-    console.log(orderedOn);
+    // const customerId = decoded._id
+    const address = req.body.address
+    const date = new Date()
+    const day = date.getDate()
+    const month = date.getMonth() + 1
+    const year = date.getFullYear()
+    const dayDelay = Math.floor(Math.random() * 10) + 1
+    const orderedOn = day + '-' + month + '-'+ year
+    const deliveryDate = day + dayDelay + '-' + month + '-'+ year
     try{
-        const cart = await cartModel.findById()
+        let cart = await cartModel.findById(cartId)
+            .populate('products')
         const products = cart.products
-    }catch(err){
+        if(!products){
+            res.status(400).json({
+                message:'cart is empty'
+            })
+        }
 
+        const newOrder = new orderModel({
+            address: address,
+            products: products,
+            orderedOn: orderedOn,
+            deliveryDate: deliveryDate
+        })
+        try{
+            const savedOrder = await newOrder.save()
+            res.status(200).json({
+                message: 'order placed successfully',
+                order: savedOrder
+                //.populate('products'),
+            })
+        }catch(err){
+            res.status(400).json({
+                message: 'error saving the order',
+                error: err.stack
+            })
+        }
+        // clearCart
+        
+    }catch(err){
+        res.status(500).json({
+            message: 'internal server error',
+            error: err.stack
+        })
     }
     
 }

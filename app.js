@@ -35,8 +35,8 @@ app.use('/customer', customerRouter)
 app.use('/seller', sellerRouter)
 app.use('/products', productRouter)
 app.use('/cart', cartRouter)
-app.use((req, res) => {
-    res.status(404).json({
-        error: 'page not found'
-    })
-})
+// app.use((req, res) => {
+//     res.status(404).json({
+//         message: 'page not found'
+//     })
+// })

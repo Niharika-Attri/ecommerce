@@ -10,10 +10,10 @@ const orderSchema = new mongoose.Schema({
         ref: 'cart'
     }],
     orderedOn: {
-        type: Date
+        type: String
     },
     deliveryDate: {
-        type: Date
+        type: String
     }
 })
 
