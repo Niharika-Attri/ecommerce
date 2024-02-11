@@ -236,25 +236,29 @@ const placeOrder = async(req, res) => {
         return
     }
     const cartId = req.params.id
-    // const customerId = decoded._id
     const address = req.body.address
+    //date
     const date = new Date()
     const day = date.getDate()
     const month = date.getMonth() + 1
     const year = date.getFullYear()
+    // days for delivery
     const dayDelay = Math.floor(Math.random() * 10) + 1
+
     const orderedOn = day + '-' + month + '-'+ year
     const deliveryDate = day + dayDelay + '-' + month + '-'+ year
     try{
+        // find by id and populate products
         let cart = await cartModel.findById(cartId)
             .populate('products')
         const products = cart.products
+        // if no products found
         if(!products){
             res.status(400).json({
                 message:'cart is empty'
             })
         }
-
+        // new order
         const newOrder = new orderModel({
             address: address,
             products: products,
@@ -262,6 +266,7 @@ const placeOrder = async(req, res) => {
             deliveryDate: deliveryDate
         })
         try{
+            //save order
             const savedOrder = await newOrder.save()
             res.status(200).json({
                 message: 'order placed successfully',

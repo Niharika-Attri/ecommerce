@@ -7,8 +7,6 @@ const viewAll = async(req, res) => {
         const page = parseInt(req.query.page)-1||0;
         const limit = parseInt(req.query.limit) || 5;
         let sort = req.query.sort || "price"
-        // const products = await productModel.find({})
-        // res.status(200).json(products)
         req.query.sort?(sort = req.query.sort.toString().split(",")):(sort = [sort])
         let sortBy = {}
         if(sort[1]){
@@ -16,13 +14,12 @@ const viewAll = async(req, res) => {
         }else{
             sortBy[sort[0]] = "asc"
         }
-
-        // let queryObj = {...req.query};
+        //find all products
         let products = await productModel.find({})
             .sort(sortBy)
             .skip(page*limit)
             .limit(limit)
-
+        // if no products found
         if(products.length == 0){
             res.status(400).json({
                 message:"no products found"
@@ -35,15 +32,6 @@ const viewAll = async(req, res) => {
             limit,
             products
         })
-        // if(req.query.sort){
-        //     const sortBy = req.query.sort.split(',').join(' ');
-        //     query = query.sort(sortBy)
-        // }else{
-        //     query
-        // }
-        // const product = await query;
-
-        
     }catch(err){
         res.status(500).json({
             error: err.stack,
@@ -58,13 +46,16 @@ const singleProduct = async(req, res) => {
     const id = req.params.id
 
     try{
+        // find by id
         const product = await productModel.findById(id);
+        //if not found
         if(!product){
             res.status(404).json({
                 message: "product not found"
             })
             return
         }
+        //found successfully
         res.status(200).json({
             message: "successfully recieved product by productId",
             product: product

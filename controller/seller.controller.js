@@ -16,7 +16,7 @@ cloudinary.config({
 // seller signup
 const sellerSignup = async (req, res) => {
     const data = req.body
-
+    // if data not entered
     if(!data.name || !data.email || !data.password){
         res.status(400).json({
             message: 'please provide name, email and password'
@@ -62,7 +62,7 @@ const sellerSignup = async (req, res) => {
 // seller login
 const sellerLogin = async (req, res) => {
     const data = req.body;
-
+    // if data not provided
     if(!data.email || !data.password){
         res.status(400).json({
             message:'please provide email and password'
@@ -74,7 +74,7 @@ const sellerLogin = async (req, res) => {
         const existingUser = await sellerModel.findOne({
             email: data.email
         })
-
+        //if user doesn't exist
         if(!existingUser){
             res.status(400).json({
                 message: 'email not registered, please sign in '
@@ -83,6 +83,7 @@ const sellerLogin = async (req, res) => {
 
         // comparing password
         const passwordMatch = await bcrypt.compare(data.password, existingUser.password)
+        // if password doesn't match
         if(!passwordMatch){
             res.status(401).json({
                 message: 'authentication failed'
@@ -165,7 +166,7 @@ const addProduct = async(req, res) => {
         name: data.name,
         price: data.price
     })
-
+    //if product doesn't exist
     if(!existingProduct){
         try{
             // upload image
