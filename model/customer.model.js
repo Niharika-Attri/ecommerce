@@ -7,8 +7,16 @@ const customerSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: true
-    },
+        required: true,
+        //email validation
+        validate: {
+            validator: function(v) {
+              // Regular expression to validate email
+              return /\S+@\S+\.\S+/.test(v);
+            },
+            message: props => `${props.value} is not a valid email address!`
+          }
+        },
     password: {
         type: String,
         required: true
